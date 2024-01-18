@@ -1,0 +1,462 @@
+---
+title: "Introduction to R: Week 2 Lab Notebook"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+# Introduction to Population Genetics in R
+Based on the Population genetics workshop by John Novembre and the Introduction to data.table found at: https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html.  Much of the text and examples originated from these publicly-available sources and was modified to suit this class
+
+*Modified by Priscilla Erickson, University of Richmond, January 2024*
+
+### Welcome 
+
+You are reading an R notebook. There is text that has instructions and information, and you can add and modify it. For example, you can answer questions by typing directly in the document: I will indicate these using **Question** and **Answer here:**. Please leave the **Answer here** so that I can use Ctrl+F to find answers in your document! 
+
+**Question** What is your name?
+**Answer here**
+
+Then you will see "code chunks", which are demarcated by lines that look like this:
+
+``` {r}
+print("your code here")
+1+2*3
+```
+
+Click on the green arrow that points to the right at the upper right of the code above. See what happens? R executed that code and returned a value. In this case, it just printed "your code here" and the sum of 1+2+3.
+
+This exercise is going to expose you the utility of using R for basic statistical analyses by looking at human genetic data to see where differences lie in the human genome.  
+
+# A brief introduction to R using the data.table package and ggplot2
+
+### Note about logistics
+
+R can do a lot on its own, but people have written thousands of "libraries" that add additional functions for different purposes. We will use some of functions from the `data.table` and `ggplot2` and  libraries. `data.table` allows us to manipulate data organized in rows and columns, like an Excel spreadsheet.  `ggplot2` is the gold-standard for making beautiful graphs in R. Let's load them now.
+
+```{r message=FALSE}
+library(data.table)
+library(ggplot2)
+library(rmarkdown)
+
+```
+
+### Reading data
+
+Next we need to load in some example data to work with. We'll look at some data about all the flights that took off and landed in New York City in 2014. R works with functions, which are commands that are followed by parentheses--much like how formula work in Excel. The backwards arrow ("<-") saves the data to a particular named object. So the code below is going to us the function `fread()` from the data.table package to read in the file called `flights.txt` and save it to an object called `f`. Anytime we type f after this, R will refer to this flight data table that we read in.
+
+```{r}
+
+#note that R ignores anything things after a hashtag (#): the next line will not be calculated so I will have messages for you in the code block. You can add your own notes too! 
+
+f<-fread("flights.txt")
+
+```
+
+You can see the first few rows and columns of your data by just typing the name of the data that you just saved. At the bottom, it will tell you the total size of your table. Hit the green run arrow to see a preview of "f"
+
+```{r}
+f
+```
+
+### Viewing data
+
+If you just want to see what all the columns are instead of seeing the whole table, you can use the function `names()` to print just the column names
+```{r}
+names(f)
+```
+
+The little preview of the table above will tell you the size of the data table but there is also a function for that! You can see the number of rows or columns of any data table with `nrow()` and `ncol()`: try using them below to count the rows and columns of `f`.
+
+```{r}
+
+
+```
+
+### Subsetting or filtering data
+
+This table is huge, over 250,000 rows--you wouldn't want to be dealing with this in Excel! To tell data.table that we want to work with only certain information inside of f, we use square brackets: `f[]` with the information we want to filter inside of the square brackets. You can pull out specific rows of a data.table using logic statements based on information in the columns. To find rows that have a particular numerical value in a given column, we use square brackets and two equal signs, ==, to say what we are looking for. So below, we will find all the rows for flights in February by using `month==2` (the second month of the year).
+
+```{r}
+f[month==2]
+```
+
+If you are looking for all the rows containing a value that is made up of characters (letters), you have to put it in quotes after the ==. To find all the flights on American Airlines, we can say:
+
+```{r}
+f[carrier=="AA"]
+```
+
+
+You can also use >, <, >=, and <= to find values greater or less than a particular value. Below, we will find all flights delayed 15 minutes or less (the airlines' definition of "on time!")
+```{r}
+f[dep_delay<=15]
+```
+
+Time to practice! How would you extract the following bits of data in the table? You should add five lines of code below.
+
+```{r}
+#Find all the flights in May
+
+#Find all the rows that originated at LaGuardia (LGA airport)
+
+#Find all the flights that departed on time (dep_delay is 0 or negative)
+
+#Find all the flights with an arrival delay of over one hour
+
+#find all the flights that arrived in LA (LAX)
+
+
+```
+
+You can combine functions like `nrow()` with conditional statements to find out how much data meets a certain criteria. If you just want to know the total number of flights that originated at Newark (EWR), you could count the number of rows in the extracted data with:
+
+```{r}
+nrow(f[origin=="EWR"])
+```
+
+You try it! How many flights had an air_time of over 4 hours (240 minutes?)
+```{r}
+
+```
+
+### Sorting data
+
+We can sort our data table using the order() function with the name of the column we wanted to sort by inside the square brackets. So to sort flights by distance from smallest to largest we could say:
+
+```{r}
+f[order(distance)]
+```
+Now try sorting the data by departure delay:
+```{r}
+
+```
+
+### Creating new data columns with formula
+
+We can also calculate new columns with formula, much like you do in excel with formulas. Below we will calculate the velocity of a flight by dividing its distance by its airtime, but you can use any of the normal math symbols like +, -, /, and * in your formula.  To create new columns, we use a very specific setup that might look a little confusing at first. Inside the square brackets we type a comma, then the name of the new column, then := and then the formula to calculate that column.  So to create our "speed" calculation, we say:
+
+```{r}
+f[,velocity:=distance/air_time]
+```
+
+You can make sure that it worked by typing f again and seeing the new column appear. You might have to scroll to the right to find it.
+
+```{r}
+f
+```
+
+Try it! Calculate a new column called `total_delay` that is equal to the sum of the departure delay and the arrival delay and then confirm that it worked. 
+```{r}
+
+```
+
+### Plotting with ggplot2
+
+We can use a second R package called "ggplot" to quickly make nice graphs of our data. The setup for ggplots can be a bit complicated, so I'll always give you a framework and you will fill in the relevant pieces of information for the x and y variables. If you want to see the distribution of your data, you can use a histogram; here we will look at the distribution of the total_delay column you just created. We specify the variable we are graphing with the `x=total_delay` part of the code. 
+
+```{r}
+ggplot(f)+geom_histogram(aes(x=total_delay))
+```
+
+
+ We can also easily make scatterplots with two continuous variables. Here' we'll see if there is a correlation between departure delay and arrival delay:
+
+```{r}
+ggplot(f)+geom_point(aes(x=arr_delay, y=dep_delay))
+```
+We can even color code the plot by a variable, like airline by adding color=carrier to the code:
+
+
+```{r}
+ggplot(f)+geom_point(aes(x=arr_delay, y=dep_delay, color=carrier))
+```
+
+Try it yourself: try making a scatterplot of distance versus flight time and color coding by origin airport. Replace the `...` in the code below.
+
+```{r}
+ggplot(f)+geom_point(aes(x=.., y=..., color=...)) 
+```
+
+That was our crash course on some of the most basic functions of the data.table and ggplot2 packages . They can be combined in all sorts of ways to do fancy things. We're now going to transition to using some of these skills to analyze human genetic data instead of flights!
+
+# Exploring human genetic data
+
+### Introductory terminology for our case study
+
+- Single-nucleotide polymorphism (SNP):  A nucleotide basepair that is *polymorphic* (i.e. it has multiple types or *alleles* in the population)
+- Allele:  A particular variant form of DNA  (e.g. A particular SNP may have the "A-T" allele in one DNA copy and "C-G" in another. In many cases we don't care about the precise base, so we might call these simply the *A1* and *A2* alleles, or the *A* or *a* alleles, or the *0* and *1* alleles.) Here will use A1 and A2 for our alleles. 
+- Genotype: The set of alleles carried by an individual (E.g. AA, AC, CC; or AA, Aa, and aa; depending on what we are calling each allele.
+
+### The data-set and basic pre-processing
+
+We will look at a global-scale sampling of human diversity. Basically researchers identified the genotypes of about 1,000 people for 600,000 genetic variants or SNPs. We have filtered down the individuals to a set of 938 unrelated individuals. These individuals come from 52 different populations around the world. We have also extracted the number of people who had each of the three possible genotypes at each genetic variant. The files with these genotype frequencies are your starting points. 
+
+### Initial view of the data
+The data that we are using was downloaded from Github along with the workbook that you are reading right now.
+We will use a function called `fread()` to read in the data table and we will save it as an object called `g`. 
+
+```{r}
+g <- fread("H938_downsampled.geno", header=TRUE)
+
+```
+
+
+If you want to see just the first few rows of a data.table, you can use a function called `head()` to see the first 6 rows. Try using `head()` to see the beginning of your data table `g`:
+
+```{r}
+
+```
+
+Here is an explanation of the columns you can see above. Read this information carefully as you will need to understand it to continue the lab.
+
+- CHR: The chromosome number out of our 23 chromosomes.  In this case they are all from chromosome 15.
+- snp.number: an index that gives each SNP a unique number in their order across their genome
+- SNP: The id of a SNP is a unique, universal identifier for a particular SNP. These ids are used in a wide variety of databases and resources.
+- A1: The rarer allele at the SNP (DNA base)--which nucleotide occurs less commonly in the population? 
+- A2: The more common allele (DNA base)--which nucleotide occurs more commonly in the population?
+- nA1A1 : The number of A1/A1 homozygous people
+- nA1A2 : The number of A1/A2 heterozygous people
+- nA2A2 : The number of A2/A2 homozygous people
+
+###  Looking at the size of the data.table
+
+How big is this data table? Use one or more of the functions you learned above to find out. 
+
+```{r}
+
+
+```
+
+**Question** How many rows are there, and what does each row represent?
+
+(don't forget to leave the "answer here" so I can find your answers)
+**Answer here:** 
+
+### Subsetting the data
+
+Use the rules you learned about filtering data above to answer the questions with code. Enter your code in the chunk below
+
+```{r}
+#How many SNPs have a "G" as allele 2 (A2)?
+
+
+#How many SNPs have at least 100 A1A1 homozygotes?
+
+
+```
+
+### Calculate the number of counts at each locus
+
+Next we will compute the total *number of observations* at each SNP by summing each of the three possible genotypes and creating a new column with that total number.  Use the format you learned above to calculate a new column called `nObs` for the total number of observations. Replace the `...` below with the rest of the equation to calculate the total number of observations and then confirm that you successfully created the new column
+
+```{r}
+#calculate the total number of observations
+g[ , ... := ... + ... + ...] 
+#look at your updated table to make sure it worked!
+
+
+```
+
+Look at the new version of your dataframe `g` that should have printed above and confirm that you now have a new `nObs` column
+
+**Question:** In your own words, what is nObs telling us?
+
+**Answer here**
+
+
+Now we can make a histogram of our number of observations: replace the `...` in the code below.
+
+```{r}
+ggplot(g)+geom_histogram(aes(x=...))
+```
+
+**Question:** Describe the plot. What is the most common value of nObs? Why are some values lower, but none are higher? You may need to look back at the information about the dataset above to remind yourself what is included in this dataset.
+
+**Answer here:**
+
+### Calculating genotype and allele frequencies
+
+Let's move on to calculating genotype frequencies. Remember that the genotype frequency is how common a particular genotype is relative to the whole population (in other words, what proportion of the population has that genotype out of all the possible genotypes?)  For the A1A1 homozygous genotype, we will refer to its frequency as p11 (shorthand for "proportion of A1A1 genotypes"). The frequencies of A1A2 and A2A2 will be p12 and p22 respectively. Complete the last two lines of code below and calculate new columns for the genotype frequencies for all 3 genotypes.
+
+```{r}
+#The equation for p11 is:
+g[, p11 := nA1A1/nObs]
+# calculate p12 here:
+
+
+# calculate p22 here:
+
+
+#look at your data and confirm that all three columns have been added and have values:
+
+```
+
+### Compute allele frequencies from genotype frequencies
+
+We have genotype frequencies and now we need to calculate the *allele frequencies* of the A1 and A2 alleles. The allele frequency is how common each allele is in the population. This is like counting up all the alleles in a Hardy-Weinberg problem. The equations to calculate p is below; you calculate q!
+
+```{r}
+g[,p := p11 + 0.5*p12] 
+
+#now finish the calculation for a new column called q here (there are two different ways you could do it!)
+
+g[,... := ... ] 
+```
+
+**Question:**  Explain the equation for p. Where did the 0.5 in the equation for p come from? 
+
+**Answer here:**
+
+And let's plot the frequency of p vs the frequency of q.  This time we'll use `geom_point` to make a scatterplot with x and y variables. Replace the `...` below to finish the code
+
+```{r}
+ggplot(g)+geom_point(aes(x= ... , y = ...)) 
+```
+
+**Question:**  Why is this graph a perfectly straight line?
+
+**Answer here:**
+
+### Plotting genotype as a function of allele frequencies
+
+Let's look at an initial plot of genotype vs allele frequencies.  First we need to transform our data into a "melted" version, which we will save as a new object called `g.melt`. This is tricky operation, so don't worry too much about what the code says right now, just run the code and compare the new data table to the starting table. It has all the same information, just organized differently.
+
+```{r}
+g.melt<-melt(g, id.vars=c("SNP", "p", "CHR"), measure.vars=c("p11", "p12", "p22"), value.name="frequency", variable.name="genotype")
+g.melt[order(SNP)]
+```
+
+**Question:** Look at the `g.melt` object shown above. What did we just do here? The data are the same, but how has the organization changed?
+
+**Answer here:**
+
+Now we are going to make a plot of genotype frequencies as a function of the allele frequencies using our new `g.melt` data table that we just made. We will color code by the three different genotypes. First, we have to tell ggplot what data to use.  Notice how I've broken the code into multiple lines to make it easier to read here. Replace each `...` to complete the code but don't lose the commas, they are important!
+
+```{r}
+
+ggplot(g.melt) + geom_point(aes(x = ... ,
+                               y = ... , 
+                               color = ...))
+```
+
+
+
+**Question:** In your own words, what is this plot showing? What does each point represent? What are the x and y axes? What types of relationships do you see?
+
+**Answer here:**
+
+
+Under assumptions that there is no mutation, no natural selection, infinite population size, random mating and no migration, then the genotype frequencies will demonstrate a simple relationship with the allele frequencies. We typically use *p *and *q* (where q=1-p) for the frequencies of allele 1 and 2, and present these *Hardy-Weinberg proportions* as: *p^2*, *2pq*, and *q^2*. 
+
+**Question** If you look at data and see that it does not conform to Hardy-Weinberg expectations, what does that tell you?
+
+**Answer here** 
+
+Let's add to the plot lines that represent Hardy-Weinberg proportions on top of our data. Don't worry about the code here, just know that you can use `ggplot` to plot lines too!
+
+```{r}
+ggplot(g.melt)+
+  geom_point(aes(x=p,y=frequency,color=genotype))+ #this is the same plot as before
+  stat_function(fun=function(x) x^2, geom="line", colour="red",linewidth=2.5) + #adding the p^2 homozygous line
+  stat_function(fun=function(x) 2*x*(1-x), geom="line", colour="green",linewidth=2.5) + #adding the p12 heterozygous line
+  stat_function(fun=function(x) (1-x)^2, geom="line", colour="blue",linewidth=2.5)  #adding the p22  homozygous line
+```
+
+**Question** How do the actual data (the points) visually compare to the Hardy-Weinberg expectations shown in the solid lines? Do most SNPs generally fit the expectations? Do you see any SNPs that are very different? 
+**Answer here**
+
+
+***Please pause here and discuss your answer above with Dr. E before moving on***
+
+
+### Finding specific loci that are large departures from Hardy-Weinberg
+
+We saw that most SNPs generally fit Hardy-Weinberg expectations, with a few exceptions Now let's ask if we can find any specific loci that are truly huge departures from H-W proportions. These might be loci that are particularly interesting in terms of human evolution. To find these loci, we'll compute a population genetic statistic called *F*, which is the relative deficiency of heterozygotes. We compare the expected number of heterozygotes under HWE to the actual number of heterozygotes in the population. If the expected is equal to the actual, our F value should be 0, so numbers further from 0 are the most unexpected.Another way to think about this F statistic is that it is a measure of how far a particular SNP is from the expected lines drawn above. 
+
+
+```{r}
+g[,F := ((2*p*q)-p12) / (2*p*q)]
+```
+
+**Question:** Try to explain in your own words what the F equation above is doing. which part of the equation is referring to observed heterozygotes, and which is calculating expected?
+
+**Answer here:**
+
+Now let's make a plot of all the values of F for all the SNPs in our dataset using the  histogram tool we learned at the beginning.
+
+```{r}
+ggplot(g)+geom_histogram(aes(x=F))
+```
+
+**Question** Does a large F value mean that there are too many heterozygotes or not enough heterozygotes?
+
+**Answer here**
+
+
+
+**Question** How do you think natural selection might influence F values?
+
+**Answer here**
+
+Another way to think of F-values is as a measure of how genetically different populations are. When populations are very different, there aren't many heterozygotes and higher F-values, so higher Fs mean greater genetic differences across groups or populations. Most of the SNPs here show relatively low F-values (below ~0.5), which means that as a whole, the human population is mostly quite similar!
+
+However, there are a few interesting SNPS that show  a very high  *F* value. Do these SNPs all show up in the same part of the genome or different genes?
+We can see F values across the genome by making a "Manhattan plot" that shows the position of each SNP on each chromosome and it's associated F-value. Here we'll plot all the SNPs in order across the genome with their associated F value on the y-axis: 
+
+```{r}
+ggplot(g)+geom_point(aes(x=snp.number, y=F, color=as.factor(CHR)), alpha=0.5)+geom_hline(yintercept=0) 
+
+```
+
+**Question:** Describe the location of high values of F statistics. Are they in the same part of the genome or distributed? Which one stands out the most to you?
+
+**Answer here:**
+
+Let's extract the SNP id for the largest value (the SNP with the *fewest* heterozygotes relative to expectations) by using the `order()` function to sort by the value of F. The negative sign in front of F tells it to sort in DESCENDING order instead of ascending so that the highest F value will be on top.
+
+```{r}
+g[order(-F)]
+```
+
+**Question:** Which SNP has the highest value of F (you might need to scroll in the table above)? In your own words, what does that high value of F mean? 
+
+**Answer here**
+
+Search for this SNP at https://www.ncbi.nlm.nih.gov/snp/. Click on the name of SNP (rsXXX), then scroll down and click the "Frequency" link. 
+
+**Question** How do the frequencies of the two alleles of this SNP differ between African and European samples?
+
+**Answer here**
+
+The SNP you identified is near a gene called SLC24A5. 
+
+**Question:** Carry out a Google Scholar search for this gene using the term "positive selection" and see what you find. What is the role of SLC24A5? What phenotypes/traits does it affect? 
+
+**Answer here**
+
+
+**Question**  Why might alleles of this gene have experienced positive selection in certain environments?
+
+**Answer here** 
+
+
+It's thought that the high F value we observed here for SLC24A5 is because natural selection led to extreme geographic differentiation of alleles in this gene, meaning that people living in one part of the world tend to have one allele, and people living in another region of the world may tend to have different alleles. The two alternate alleles may have provided selective advantages in different environments as you described above, causing them to increase in frequency over time. As a result, most individuals in a given population are homozygous, and there are few heterozygotes because historically the populations did not experience gene flow.
+
+
+**Question** Here we were looking at one of the most extreme departures from Hardy-Weinberg in the whole genome, as indicated by our Manhattan plot. We have reason to suspect this region was under natural selection. What does that tell you about overall genetic differences between human populations, and the cause when we do see differences?  
+
+**Answer here**
+
+
+*When you reach this point in the document, please chat with Dr. Erickson about your conclusions, especially for the last two questions*
+
+**After talking to Dr. Erickson, please follow the lab instructions for how to make a pdf from this document to submit it to Blackboard**
+
+### References
+
+Li, Jun Z, Devin M Absher, Hua Tang, Audrey M Southwick, Amanda M Casto, Sohini Ramachandran, Howard M Cann, et al. 2008. “Worldwide Human Relationships Inferred from Genome-Wide Patterns of Variation.” Science 319 (5866): 1100–1104.
+
+Pickrell, Joseph K, Graham Coop, John Novembre, Sridhar Kudaravalli, Jun Z Li, Devin Absher, Balaji S Srinivasan, et al. 2009. “Signals of Recent Positive Selection in a Worldwide Sample of Human Populations.” Genome Research 19 (5): 826–37.
