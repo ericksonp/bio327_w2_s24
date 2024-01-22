@@ -75,52 +75,6 @@ The little preview of the table above will tell you the size of the data table b
 
 ```
 
-### Subsetting or filtering data
-
-This table is huge, over 250,000 rows--you wouldn't want to be dealing with this in Excel! To tell data.table that we want to work with only certain information inside of f, we use square brackets: `f[]` with the information we want to filter inside of the square brackets. You can pull out specific rows of a data.table using logic statements based on information in the columns. To find rows that have a particular numerical value in a given column, we use square brackets and two equal signs, ==, to say what we are looking for. So below, we will find all the rows for flights in February by using `month==2` (the second month of the year).
-
-```{r}
-f[month==2]
-```
-
-If you are looking for all the rows containing a value that is made up of characters (letters), you have to put it in quotes after the ==. To find all the flights on American Airlines, we can say:
-
-```{r}
-f[carrier=="AA"]
-```
-
-
-You can also use >, <, >=, and <= to find values greater or less than a particular value. Below, we will find all flights delayed 15 minutes or less (the airlines' definition of "on time!")
-```{r}
-f[dep_delay<=15]
-```
-
-Time to practice! How would you extract the following bits of data in the table? You should add five lines of code below.
-
-```{r}
-#Find all the flights in May
-
-#Find all the rows that originated at LaGuardia (LGA airport)
-
-#Find all the flights that departed on time (dep_delay is 0 or negative)
-
-#Find all the flights with an arrival delay of over one hour
-
-#find all the flights that arrived in LA (LAX)
-
-
-```
-
-You can combine functions like `nrow()` with conditional statements to find out how much data meets a certain criteria. If you just want to know the total number of flights that originated at Newark (EWR), you could count the number of rows in the extracted data with:
-
-```{r}
-nrow(f[origin=="EWR"])
-```
-
-You try it! How many flights had an air_time of over 4 hours (240 minutes?)
-```{r}
-
-```
 
 ### Sorting data
 
@@ -235,19 +189,6 @@ How big is this data table? Use one or more of the functions you learned above t
 (don't forget to leave the "answer here" so I can find your answers)
 **Answer here:** 
 
-### Subsetting the data
-
-Use the rules you learned about filtering data above to answer the questions with code. Enter your code in the chunk below
-
-```{r}
-#How many SNPs have a "G" as allele 2 (A2)?
-
-
-#How many SNPs have at least 100 A1A1 homozygotes?
-
-
-```
-
 ### Calculate the number of counts at each locus
 
 Next we will compute the total *number of observations* at each SNP by summing each of the three possible genotypes and creating a new column with that total number.  Use the format you learned above to calculate a new column called `nObs` for the total number of observations. Replace the `...` below with the rest of the equation to calculate the total number of observations and then confirm that you successfully created the new column
@@ -303,7 +244,7 @@ g[,p := p11 + 0.5*p12]
 
 #now finish the calculation for a new column called q here (there are two different ways you could do it!)
 
-g[,... := ... ] 
+g[, q := ... ] 
 ```
 
 **Question:**  Explain the equation for p. Where did the 0.5 in the equation for p come from? 
