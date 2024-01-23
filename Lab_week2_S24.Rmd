@@ -34,7 +34,7 @@ This exercise is going to expose you the utility of using R for basic statistica
 
 ### Note about logistics
 
-R can do a lot on its own, but people have written thousands of "libraries" that add additional functions for different purposes. We will use some of functions from the `data.table` and `ggplot2` and  libraries. `data.table` allows us to manipulate data organized in rows and columns, like an Excel spreadsheet.  `ggplot2` is the gold-standard for making beautiful graphs in R. Let's load them now.
+R can do a lot on its own, but people have written thousands of "libraries" that add additional functions for different purposes. We will use some of functions from the `data.table` and `ggplot2` and  libraries. `data.table` allows us to manipulate data organized in rows and columns, like an Excel spreadsheet.  `ggplot2` is the gold-standard for making beautiful graphs in R. Let's load them now by running the code below.
 
 ```{r message=FALSE}
 library(data.table)
@@ -45,7 +45,7 @@ library(rmarkdown)
 
 ### Reading data
 
-Next we need to load in some example data to work with. We'll look at some data about all the flights that took off and landed in New York City in 2014. R works with functions, which are commands that are followed by parentheses--much like how formula work in Excel. The backwards arrow ("<-") saves the data to a particular named object. So the code below is going to us the function `fread()` from the data.table package to read in the file called `flights.txt` and save it to an object called `f`. Anytime we type f after this, R will refer to this flight data table that we read in.
+Next we need to load in some example data to work with. We'll look at some data about all the flights that took off and landed in New York City in 2014. R works with functions, which are commands that are followed by parentheses--much like how formula work in Excel. The backwards arrow ("<-") saves the data to a particular named object. So the code below is going to us the function `fread()` from the data.table package to read in the file called `flights.txt` and save it to an object called `f`. Anytime we type f after this, R will refer to this flight data table.
 
 ```{r}
 
@@ -68,7 +68,7 @@ If you just want to see what all the columns are instead of seeing the whole tab
 names(f)
 ```
 
-The little preview of the table above will tell you the size of the data table but there is also a function for that! You can see the number of rows or columns of any data table with `nrow()` and `ncol()`: try using them below to count the rows and columns of `f`.
+The little preview of the table above will tell you the size of the data table but there is also a function for that! You can see the number of rows or columns of any data table with `nrow()` and `ncol()` functions: try using them below to count the rows and columns of `f`.
 
 ```{r}
 
@@ -78,11 +78,12 @@ The little preview of the table above will tell you the size of the data table b
 
 ### Sorting data
 
-We can sort our data table using the order() function with the name of the column we wanted to sort by inside the square brackets. So to sort flights by distance from smallest to largest we could say:
+We can sort our data table using the `order()` function with the name of the column we wanted to sort by inside  square brackets. So to sort flights in our table `f` by distance from smallest to largest we could say:
 
 ```{r}
 f[order(distance)]
 ```
+
 Now try sorting the data by departure delay:
 ```{r}
 
@@ -109,19 +110,20 @@ Try it! Calculate a new column called `total_delay` that is equal to the sum of 
 
 ### Plotting with ggplot2
 
-We can use a second R package called "ggplot" to quickly make nice graphs of our data. The setup for ggplots can be a bit complicated, so I'll always give you a framework and you will fill in the relevant pieces of information for the x and y variables. If you want to see the distribution of your data, you can use a histogram; here we will look at the distribution of the total_delay column you just created. We specify the variable we are graphing with the `x=total_delay` part of the code. 
+We can use a second R package called "ggplot" to quickly make nice graphs of our data. The setup for ggplots can be a bit complicated, so I'll always give you a framework and you will fill in the relevant pieces of information for the x and y variables. If you want to see the distribution of your data, you can use a histogram; here we will look at the distribution of the total_delay column you just created. We specify the data we want to plot with `ggplot(f)` , the type of graph with `geom_histogram`, and the variable we are graphing with the `x=total_delay` part of the code. 
 
 ```{r}
 ggplot(f)+geom_histogram(aes(x=total_delay))
 ```
 
 
- We can also easily make scatterplots with two continuous variables. Here' we'll see if there is a correlation between departure delay and arrival delay:
+We can also easily make scatterplots with two continuous variables using `geom_point`. Here' we'll see if there is a correlation between departure delay and arrival delay:
 
 ```{r}
 ggplot(f)+geom_point(aes(x=arr_delay, y=dep_delay))
 ```
-We can even color code the plot by a variable, like airline by adding color=carrier to the code:
+
+We can even color code the plot by a variable, like airline by adding `color=carrier` to the code:
 
 
 ```{r}
@@ -134,23 +136,25 @@ Try it yourself: try making a scatterplot of distance versus flight time and col
 ggplot(f)+geom_point(aes(x=.., y=..., color=...)) 
 ```
 
-That was our crash course on some of the most basic functions of the data.table and ggplot2 packages . They can be combined in all sorts of ways to do fancy things. We're now going to transition to using some of these skills to analyze human genetic data instead of flights!
+That was our crash course on some of the most basic functions of the data.table and ggplot2 packages. They can be combined in all sorts of ways to do fancy things. We're now going to transition to using some of these skills to analyze human genetic data instead of flights!
 
 # Exploring human genetic data
 
 ### Introductory terminology for our case study
 
-- Single-nucleotide polymorphism (SNP):  A nucleotide basepair that is *polymorphic* (i.e. it has multiple types or *alleles* in the population)
-- Allele:  A particular variant form of DNA  (e.g. A particular SNP may have the "A-T" allele in one DNA copy and "C-G" in another. In many cases we don't care about the precise base, so we might call these simply the *A1* and *A2* alleles, or the *A* or *a* alleles, or the *0* and *1* alleles.) Here will use A1 and A2 for our alleles. 
+Read the information below to refresh your knowledge of genotypes, SNPs, and alleles. 
+
+- Single-nucleotide polymorphism (SNP):  A nucleotide basepair that is *polymorphic* (i.e. it has multiple types or *alleles* in the population). For example, some individuals have an A and other individuals have a C at a particular location in the genome.
+- Allele:  A particular variant form of DNA  (e.g. A particular SNP may have the "A-T" allele in one DNA copy and "C-G" in another. In many cases we don't care about the precise base, so we might call these simply the *A1* and *A2* alleles, or the *A* or *a* alleles) Here will use A1 and A2 for our alleles. 
 - Genotype: The set of alleles carried by an individual (E.g. AA, AC, CC; or AA, Aa, and aa; depending on what we are calling each allele.
 
 ### The data-set and basic pre-processing
 
-We will look at a global-scale sampling of human diversity. Basically researchers identified the genotypes of about 1,000 people for 600,000 genetic variants or SNPs. We have filtered down the individuals to a set of 938 unrelated individuals. These individuals come from 52 different populations around the world. We have also extracted the number of people who had each of the three possible genotypes at each genetic variant. The files with these genotype frequencies are your starting points. 
+We will look at a global-scale sampling of human diversity. Basically researchers identified the genotypes of about 1,000 people for 600,000 genetic variants or SNPs. We have filtered down the individuals to a set of 938 unrelated individuals (relatives can add confusion to the analysis). These individuals come from 52 different populations around the world. We have also extracted the number of people who had each of the three possible genotypes at each genetic variant. The files with these genotype frequencies are your starting points. 
 
 ### Initial view of the data
 The data that we are using was downloaded from Github along with the workbook that you are reading right now.
-We will use a function called `fread()` to read in the data table and we will save it as an object called `g`. 
+We will again use `fread()` to read in the data table and we will save it as an object called `g` this time. 
 
 ```{r}
 g <- fread("H938_downsampled.geno", header=TRUE)
@@ -166,8 +170,8 @@ If you want to see just the first few rows of a data.table, you can use a functi
 
 Here is an explanation of the columns you can see above. Read this information carefully as you will need to understand it to continue the lab.
 
-- CHR: The chromosome number out of our 23 chromosomes.  In this case they are all from chromosome 15.
-- snp.number: an index that gives each SNP a unique number in their order across their genome
+- CHR: The chromosome number out of our 23 chromosomes.  
+- snp.number: an index that gives each SNP a unique number in their order across their genome. 
 - SNP: The id of a SNP is a unique, universal identifier for a particular SNP. These ids are used in a wide variety of databases and resources.
 - A1: The rarer allele at the SNP (DNA base)--which nucleotide occurs less commonly in the population? 
 - A2: The more common allele (DNA base)--which nucleotide occurs more commonly in the population?
@@ -242,7 +246,7 @@ We have genotype frequencies and now we need to calculate the *allele frequencie
 ```{r}
 g[,p := p11 + 0.5*p12] 
 
-#now finish the calculation for a new column called q here (there are two different ways you could do it!)
+#now finish the calculation for a new column called q here (there are two different ways you could calculate q!)
 
 g[, q := ... ] 
 ```
@@ -263,7 +267,7 @@ ggplot(g)+geom_point(aes(x= ... , y = ...))
 
 ### Plotting genotype as a function of allele frequencies
 
-Let's look at an initial plot of genotype vs allele frequencies.  First we need to transform our data into a "melted" version, which we will save as a new object called `g.melt`. This is tricky operation, so don't worry too much about what the code says right now, just run the code and compare the new data table to the starting table. It has all the same information, just organized differently.
+Let's look at an initial plot of genotype vs allele frequencies.  First we need to transform our data into a "melted" version, which we will save as a new object called `g.melt`. Our new data table will have all the same information, just organized differently.This is tricky operation, so don't worry too much about what the code says right now, just run the code and compare the new data table to the starting table. 
 
 ```{r}
 g.melt<-melt(g, id.vars=c("SNP", "p", "CHR"), measure.vars=c("p11", "p12", "p22"), value.name="frequency", variable.name="genotype")
@@ -315,7 +319,7 @@ ggplot(g.melt)+
 
 ### Finding specific loci that are large departures from Hardy-Weinberg
 
-We saw that most SNPs generally fit Hardy-Weinberg expectations, with a few exceptions Now let's ask if we can find any specific loci that are truly huge departures from H-W proportions. These might be loci that are particularly interesting in terms of human evolution. To find these loci, we'll compute a population genetic statistic called *F*, which is the relative deficiency of heterozygotes. We compare the expected number of heterozygotes under HWE to the actual number of heterozygotes in the population. If the expected is equal to the actual, our F value should be 0, so numbers further from 0 are the most unexpected.Another way to think about this F statistic is that it is a measure of how far a particular SNP is from the expected lines drawn above. 
+We saw that most SNPs generally fit Hardy-Weinberg expectations, with a few exceptions, which means most of the genome is not violating the H-W assumptions. Now let's ask if we can find any specific loci that are truly huge departures from H-W proportions. These might be loci that are particularly interesting in terms of human evolution. To find these loci, we'll compute a population genetic statistic called *F*, which is the relative deficiency of heterozygotes--are there fewer heterozygotes than we expect under HWE? We compare the expected number of heterozygotes under HWE to the actual number of heterozygotes in the population. If the expected is equal to the actual, our F value should be 0, so numbers further from 0 are the most unexpected .Another way to think about this F statistic is that it is a measure of how far a particular SNP is from the expected lines drawn in the graph above. 
 
 
 ```{r}
@@ -332,7 +336,7 @@ Now let's make a plot of all the values of F for all the SNPs in our dataset usi
 ggplot(g)+geom_histogram(aes(x=F))
 ```
 
-**Question** Does a large F value mean that there are too many heterozygotes or not enough heterozygotes?
+**Question** What are the typical values of F in this dataset? Does a large F value mean that there are too many heterozygotes or not enough heterozygotes?
 
 **Answer here**
 
@@ -345,6 +349,7 @@ ggplot(g)+geom_histogram(aes(x=F))
 Another way to think of F-values is as a measure of how genetically different populations are. When populations are very different, there aren't many heterozygotes and higher F-values, so higher Fs mean greater genetic differences across groups or populations. Most of the SNPs here show relatively low F-values (below ~0.5), which means that as a whole, the human population is mostly quite similar!
 
 However, there are a few interesting SNPS that show  a very high  *F* value. Do these SNPs all show up in the same part of the genome or different genes?
+
 We can see F values across the genome by making a "Manhattan plot" that shows the position of each SNP on each chromosome and it's associated F-value. Here we'll plot all the SNPs in order across the genome with their associated F value on the y-axis: 
 
 ```{r}
